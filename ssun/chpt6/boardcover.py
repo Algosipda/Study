@@ -1,69 +1,74 @@
-def counting_coverway(blocks_i, blocks_j, row_p, col_p, board):
+def cover_board(i, j, board):
+	global blocks
 
-	if row_p >= len(board):
-		return 1
-	if col_p >= len(board[row_p]):
-		return counting_coverway(blocks_i, blocks_j,row_p+1, 0, board)
-	if board[row_p][col_p] == '#':
-		return counting_coverway(blocks_i, blocks_j, row_p, col_p + 1, board)
+	if i == len(board):
+			return 1
+
+	elif j == len(board[i]):
+		return cover_board(i+1, 0, board)
+
+	elif board[i][j] == '#':
+		return cover_board(i, j+1, board)
+
 	else:
 		res = 0
-		for i in range(0, len(blocks_i)):
-			if checking_coverable(blocks_i[i], blocks_j[i], row_p, col_p, board):
-				res += counting_coverway(blocks_i, blocks_j, row_p, col_p+1, board)
-				remove_block(blocks_i[i], blocks_j[i], row_p, col_p, board)
+		for block in blocks:
+			if is_usable_block(block, i, j, board):
+				board = cover(block, i, j, board)
+				res += cover_board(i, j+1, board)
+				board = uncover(block, i, j, board)
 
 		return res
 
-def checking_coverable(block_i, block_j, row_p, col_p, board):
-	coverable = True
+def is_usable_block(block, i, j, board):
+	for cell in block:
+		row = i + cell[0]
+		col = j + cell[1]
+		if col < 0:
+			return False
+		elif row >= len(board) or col >= len(board[i]):
+			return False
+		elif board[row][col] == '#':
+			return False
+	return True
 
-	for cell_delta in range(0, len(block_i)):
-		if block_i[cell_delta] + row_p < 0 or block_i[cell_delta] + row_p >= len(board):
-			coverable = False
-			break
-		elif block_j[cell_delta] + col_p < 0. or block_j[cell_delta] + col_p >= len(board[row_p]):
-			coverable = False
-			break
-		elif board[row_p + block_i[cell_delta]][col_p + block_j[cell_delta]] == '#':
-			coverable = False
-			break
+def cover(block, i, j, board):
+	for cell in block:
+		board[i+cell[0]][j+cell[1]] = "#"
+	return board
 
-	if coverable:
-		for cell_delta in range(0, len(block_j)):
-			board[row_p + block_i[cell_delta]][col_p + block_j[cell_delta]] = '#'
+def uncover(block, i, j, board):
+	for cell in block:
+		board[i+cell[0]][j+cell[1]] = '.'
+	return board
 
+def main():
+	global blocks
 
-	return coverable
+	blocks = [
+	[[0,0], [1,0], [1,1]],
+	[[0,0], [0,1], [1,1]],
+	[[0,0], [0,1], [1,0]],
+	[[0,0], [1,0], [1,-1]]]
 
-
-def remove_block(block_i, block_j, row_p, col_p, board):
-	for cell_delta in range(0, len(block_j)):
-			board[row_p + block_i[cell_delta]][col_p + block_j[cell_delta]] = '.'
-
-
-if __name__ == "__main__":
 	test_case = int(input())
-	blocks_i = [[0, 1, 1], [0, 0, 1], [0, 0, 1], [0, 1, 1]]
-	blocks_j = [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, -1]]
 
 	while test_case > 0:
-		board = []
-		row, col = map(int, input().split(' '))
+		row_size, col_size = map(int, input().split())
 		white_space = 0
-		for i in range(0, row):
-			column = []
+		board = []
+		for i in range(0, row_size):
+			col = []
 			for cell in input():
 				if cell == '.':
 					white_space += 1
-				column.append(cell)
-			board.append(column)
-
-		if white_space % 3 !=0:
+				col.append(cell)
+			board.append(col)
+		if not (white_space % 3 == 0):
 			print(0)
 		else:
-			print(counting_coverway(blocks_i, blocks_j, 0, 0, board))
-
+			print(cover_board(0,0,board))
 		test_case -= 1
 
-
+if __name__ == '__main__':
+	main()
